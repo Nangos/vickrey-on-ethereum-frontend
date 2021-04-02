@@ -1,44 +1,3 @@
-function showTime() {
-    let date = new Date();
-    let unixTime = Math.floor(date.getTime() / 1000); // in seconds
-    let readableTime = date.toLocaleString();
-
-    document.getElementById("timer").innerText = `\nTime: ${readableTime}\nEthereum Timestamp: ${unixTime}\n`
-    setTimeout(showTime, 500); // call it again per 500ms
-}
-
-function getJsonFromUrl(url) {
-    if (!url) {
-        url = location.search;
-    }
-    let query = url.substr(1);
-    let result = {};
-    query.split("&").forEach(function(part) {
-        let item = part.split("=");
-        result[item[0]] = decodeURIComponent(item[1]);
-    });
-    return result;
-}
-
-function isLegalAddress(addr) {
-    let re = /^0x[0-9A-Fa-f]{40}$/;
-    return addr.match(re) != null;
-}
-
-function isZeroHex(hex) {
-    let re = /^0x0+$/;
-    return hex.match(re) != null;
-}
-
-function isEqual(addr1, addr2) {
-    return addr1 != null && addr2 != null && addr1.toLowerCase() == addr2.toLowerCase();
-}
-
-function makeHref(text, url) {
-    return `<a target="_blank" href=${url}>${text}</a>`;
-}
-
-
 // Uses the async-await "serial" fashion to fetch the chain data.
 //
 // This can be slow, but simplifies the logic.
@@ -88,7 +47,7 @@ async function fetchAndShowContractData(contract, yourAddress) {
 
     let reservePrice = await query("reservePrice()", async () => {
         let priceInWei = await contract.reservePrice();
-        generalInfo += `The lowest possible price to bid: ${priceInWei} wei\n`;
+        generalInfo += `The lowest possible price to bid: ${asWeiAndEther(priceInWei)}\n`;
         return priceInWei;
     })
 
@@ -187,7 +146,7 @@ async function fetchAndShowContractData(contract, yourAddress) {
                 let highBid = await query("highBid()", async () => {
                     let highBidInWei = await contract.highBid();
                     if (highBidder != null && !isEqual(highBidder, seller)) {
-                        generalInfo += `The highest bid was ${highBidInWei} wei\n`;
+                        generalInfo += `The highest bid was ${asWeiAndEther(highBidInWei)}\n`;
                     }
                     return highBidInWei;
                 })
@@ -195,7 +154,7 @@ async function fetchAndShowContractData(contract, yourAddress) {
                 let secondBid = await query("secondBid()", async () => {
                     let secondBidInWei = await contract.secondBid();
                     if (highBidder != null && !isEqual(highBidder, seller)) {
-                        generalInfo += `The second highest bid (the deal) was ${secondBidInWei} wei\n`;
+                        generalInfo += `The second highest bid (the deal) was ${asWeiAndEther(secondBidInWei)}\n`;
                     }
                     return secondBidInWei;
                 })
@@ -205,14 +164,14 @@ async function fetchAndShowContractData(contract, yourAddress) {
                         personalInfo += `Unfortunately, your NFT was not sold out!\n`;
                         personalInfo += `You can call claim() to get your NFT back, if you haven't done so.\n`;
                     } else if (highBidder != null && secondBid != null) {
-                        personalInfo += `Congratulations! Your NFT was sold at the price of ${secondBid} wei!\n`;
+                        personalInfo += `Congratulations! Your NFT was sold at the price of ${asWeiAndEther(secondBid)}!\n`;
                         personalInfo += `You can call withdraw() to get your money.\n`;
                     }
                 }
 
                 if (yourAddress != null && !isEqual(yourAddress, seller)) {
                     if (isEqual(highBidder, yourAddress) && secondBid != null) {
-                        personalInfo += `Congratulations! You won the auction. You paid the seller ${secondBid} wei.\n`;
+                        personalInfo += `Congratulations! You won the auction. You paid the seller ${asWeiAndEther(secondBid)}.\n`;
                         personalInfo += `You can call claim() to claim your NFT, if you haven't done so.\n`;
                         personalInfo += `And you can call withdraw() to get back your overpaid part of the deposit.\n`;
                     }

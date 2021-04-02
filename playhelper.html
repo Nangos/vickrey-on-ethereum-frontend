@@ -3,10 +3,33 @@
     <title>Vickrey on Blockchain!</title>
     <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"
       type="application/javascript"></script>
+    <script src="util.js"></script>
     <script src="playhelper.js"></script>
   </head>
-  <body>
+  <body onload="onLoad()">
     <h1>General Auction Rules</h1>
+    <div>
+      STAGE I -- Bid:
+      <li>A bidder cannot be the seller.</li>
+      <li>A bidder should bid only one price. The price must be at least the `reservePrice`.</li>
+      <li>Bidders submit encrypted bids so that no one else knows it until they reveal.</li>
+      <li>Along with the bid, a bidder must deposit some value (note that deposit is not bid -- the deposit is not a secret!)
+      <li>Don't miss the bid deadline.</li>
+      <br>
+      STAGE II -- Reveal:
+      <li>A bidder cannot reveal until the bid deadline, but please don't miss the reveal deadline either.</li>
+      <li>The bid revealed must match the encrypted version (and no more than the deposit for sure) to be considered valid.</li>
+      <li>If a bidder do not reveal their bid in time, their deposit will be locked forever. So please always reveal!!</li>
+      <br>
+      STAGE III -- Decide the Winner:
+      <li>The bidder with the highest price wins the auction, but only pays the seller for the second highest price.</li>
+      <li>After the reveal deadline, everyone who revealed can withdraw the overpaid part of their deposit.</li>
+      <li>Corner case 1: When there's a tie, the bidder who reveals first wins. So I would say reveal as soon as you can!</li>
+      <li>Corner case 2: When there's only one valid bidder, they wins and pays for the `reservePrice`.</li>
+      <li>Corner case 3: When there's no valid bidder, nobody wins. The seller can then withdraw their item.</li>
+      <br>
+    </div>
     <button onclick="onGeneratorButtonClicked()">Generate Step-by-step Instructions for Me</button>
+    <div id="info"></div>
   </body>
 </html>

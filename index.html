@@ -3,6 +3,7 @@
     <title>Vickrey on Blockchain!</title>
     <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"
       type="application/javascript"></script>
+    <script src="util.js"></script>
     <script src="main.js"></script>
   </head>
   <body onload="onLoad()">
@@ -12,7 +13,7 @@
     <div id="your-address"></div>
     <div>
       <button onclick="location.href='navigator.html'">Change Addresses</button>
-      <button onclick="location.href='playhelper.html'">How To Play</button>
+      <button onclick="window.open('playhelper.html'+location.search)">How To Play</button>
     </div>
     <div id="timer"></div>
     <div id="general-info"></div>
