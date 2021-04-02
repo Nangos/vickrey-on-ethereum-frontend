@@ -91,7 +91,7 @@ function onGeneratorButtonClicked() {
     hash = ethers.utils.keccak256(encoder.encode(["uint"], [bidInWei]) + nonce.substr(2));
 
     // Generating the downloadable txt:
-    frondEndURL = `${location.origin}?addr=${info.addr}&whoami=${(info.whoami != null ? info.whoami : "fill-in-your-address-here")}`;
+    frondEndURL = `${location.origin}${location.pathname}?addr=${info.addr}&whoami=${(info.whoami != null ? info.whoami : "fill-in-your-address-here")}`;
     contractWriteURL = `https://ropsten.etherscan.io/address/${info.addr}#writeContract`;
     contractReadURL = `https://ropsten.etherscan.io/address/${info.addr}#readContract`;
 
