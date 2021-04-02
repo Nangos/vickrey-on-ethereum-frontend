@@ -19,6 +19,12 @@ function downloadTxtFile(filename, text) {
     document.body.removeChild(element);
 }
 
+function getRootURL() {
+    let url = location.origin + location.pathname;
+    url = url.substr(0, url.lastIndexOf("/"));
+    return url;
+}
+
 function onGeneratorButtonClicked() {
     // Check query sanity:
     let info = getJsonFromUrl();
@@ -39,7 +45,7 @@ function onGeneratorButtonClicked() {
     // Ask some more questions:
     window.alert("NOTE: This webpage will not record or leak anything you typed; it just helps you prepare for the auction.");
 
-    bidInWei = null;
+    let bidInWei = null;
     while (!bidInWei) {
         response = window.prompt(
             "How much (in wei) would you bid for the NFT?\n\n" +
@@ -49,7 +55,7 @@ function onGeneratorButtonClicked() {
         bidInWei = parseBigNumber(response);
     }
     
-    deposit = null;
+    let deposit = null;
     while (!deposit || deposit.lt(bidInWei)) {
         response = window.prompt(
             "How much (in wei) would you deposit into the auction contract?\n\n" +
@@ -60,7 +66,7 @@ function onGeneratorButtonClicked() {
         deposit = parseBigNumber(response);
     }
 
-    nonce = null;
+    let nonce = null;
     while (!nonce) {
         response = window.prompt(
             "What is the nonce (in plain words, a one-time-use PASSWORD) you want to use to encrypt your bid?\n\n" +
@@ -71,7 +77,7 @@ function onGeneratorButtonClicked() {
     }
 
     // pad your self-generated nonce to 32 bytes:
-    encoder = ethers.utils.defaultAbiCoder;
+    let encoder = ethers.utils.defaultAbiCoder;
     nonce = encoder.encode(["uint"], [nonce]);
 
     let confirmation = 
@@ -88,15 +94,15 @@ function onGeneratorButtonClicked() {
     }
 
     // Calculate some internals:
-    hash = ethers.utils.keccak256(encoder.encode(["uint"], [bidInWei]) + nonce.substr(2));
+    let hash = ethers.utils.keccak256(encoder.encode(["uint"], [bidInWei]) + nonce.substr(2));
 
-    // Generating the downloadable txt:
-    frondEndURL = `${location.origin}${location.pathname}?addr=${info.addr}&whoami=${(info.whoami != null ? info.whoami : "fill-in-your-address-here")}`;
-    contractWriteURL = `https://ropsten.etherscan.io/address/${info.addr}#writeContract`;
-    contractReadURL = `https://ropsten.etherscan.io/address/${info.addr}#readContract`;
+    // Generating the downloadable txt:  
+    let frondEndURL = `${getRootURL()}?addr=${info.addr}&whoami=${(info.whoami != null ? info.whoami : "fill-in-your-address-here")}`;
+    let contractWriteURL = `https://ropsten.etherscan.io/address/${info.addr}#writeContract`;
+    let contractReadURL = `https://ropsten.etherscan.io/address/${info.addr}#readContract`;
 
 
-    instruction = "Thanks for taking part in the auction!\n" +
+    let instruction = "Thanks for taking part in the auction!\n" +
     "Your confirmed information:\n" + confirmation + "\n\n" +
     "Your encrypted bid is: " + hash + "\n\n" +
     "Be sure to check the URL below for latest information:\n" + frondEndURL + "\n\n" +
