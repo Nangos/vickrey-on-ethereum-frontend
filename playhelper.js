@@ -104,14 +104,14 @@ function onGeneratorButtonClicked() {
 
     let instruction = "Thanks for taking part in the auction!\n" +
     "Your confirmed information:\n" + confirmation + "\n\n" +
-    "Your encrypted bid is: " + hash + "\n\n" +
+    "Your bid is encrypted into this hash: " + hash + "\n\n" +
     "Be sure to check the URL below for latest information:\n" + frondEndURL + "\n\n" +
 
     "STAGE I -- Bid (Do it before the bidding deadline!)\n" +
     " * Go to " + contractWriteURL + "\n" +
     " * Make sure you are connected to MetaMask properly, and hit the button 'Connect to Web3'\n" +
-    " * Click 'bid', and input the following as instructed:\n" +
-    "   - For 'bid (payableAmount (ether))', input " + asEtherString(deposit) + "\n" +
+    " * Click 'deposit', and input the following as instructed:\n" +
+    "   - For 'deposit (payableAmount (ether))', input " + asEtherString(deposit) + "\n" +
     "   - For 'hash (bytes32)', input " + hash + "\n" +
     "   - Click 'Write', and then confirm it in the MetaMask pop-up window\n\n" +
 
@@ -119,7 +119,7 @@ function onGeneratorButtonClicked() {
     " * Go to " + contractWriteURL + "\n" +
     " * Make sure you are connected to MetaMask properly, and hit the button 'Connect to Web3'\n" +
     " * Click 'reveal', and input the following as instructed:\n" +
-    "   - For 'amount (uint256)', input " + bidInWei + "\n" +
+    "   - For 'bid (uint256)', input " + bidInWei + "\n" +
     "   - For 'nonce (uint256)', input " + nonce + "\n" +
     "   - Click 'Write', and then confirm it in the MetaMask pop-up window\n\n" +
 
