@@ -3,7 +3,10 @@
 // This can be slow, but simplifies the logic.
 // (Anyway, Ethereum is slower!!)
 //
-async function fetchAndShowContractData(contract, yourAddress) {
+async function fetchAndShowContractData(contract) {
+    let yourAddress = ethereum.selectedAddress;
+    document.getElementById("your-address").innerHTML = `Your address: ${yourAddress}`;
+
     let generalInfo = "\nGeneral Info:\n";
     let personalInfo = "\nPersonal Info:\n";
     let errorInfo = "\n";
@@ -212,7 +215,7 @@ async function fetchAndShowContractData(contract, yourAddress) {
     document.getElementById("summary").innerText = summary;
 
     // set timeout for the next run:
-    setTimeout(fetchAndShowContractData, 10000, contract, yourAddress);
+    setTimeout(fetchAndShowContractData, 10000, contract);
 }
 
 // Just testing adding some dummy buttons
@@ -253,9 +256,6 @@ async function onLoad() {
         location.href = "navigator.html";
         return;
     }
-    if (!info.whoami || !isLegalAddress(info.whoami)) {
-        info.whoami = null;
-    }
 
     // Environment sanity checks:
     if (typeof window.ethereum === 'undefined') {
@@ -282,7 +282,7 @@ async function onLoad() {
     // Fetch & refresh the constract data every 10 seconds:
     let abi = await (await fetch("nft-vickrey.abi.json")).json();
     let auctionContract = new ethers.Contract(info.addr, abi, web3Provider);
-    fetchAndShowContractData(auctionContract, info.whoami);
+    fetchAndShowContractData(auctionContract);
 
     let web3Signer = web3Provider.getSigner();
     let signableContract = new ethers.Contract(info.addr, abi, web3Signer);
@@ -294,6 +294,5 @@ async function onLoad() {
     let prefix = "https://ropsten.etherscan.io/address/"
     document.getElementById("contract-address").innerHTML =
         `Auction contract address: ${info.addr} [${makeHref("View on Etherscan", prefix + info.addr)}]`;
-    document.getElementById("your-address").innerHTML = `Your address: ${info.whoami}`;
 }
 
