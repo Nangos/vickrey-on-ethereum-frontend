@@ -215,6 +215,31 @@ async function fetchAndShowContractData(contract, yourAddress) {
     setTimeout(fetchAndShowContractData, 10000, contract, yourAddress);
 }
 
+// Just testing adding some dummy buttons
+async function addRecommendButton(text, action, parameters) {
+    let button = document.createElement("button");
+    button.innerText = text;
+    button.onclick = async () => {
+        try {
+            await ethereum.request({ method: 'eth_requestAccounts' }); // connect to MetaMask
+            result = await action.apply(this, parameters); // submit tx (triggers MetaMask window)
+            txURL = "https://ropsten.etherscan.io/tx/" + result.hash;
+            document.getElementById("success-info").innerHTML = 
+                "Your transaction has been successfully submitted to the blockchain " +
+                "and should take effect shortly.<br>" +
+                "Track the progress " + makeHref("here", txURL) + "!";
+            document.getElementById("errors").innerText = "";
+        } catch (err) {
+            console.log(err);
+            document.getElementById("errors").innerText = "Operation failed!\n" 
+                + "Error Message: " + err.message + "\n"
+                + "See console logs for more information.";
+            document.getElementById("success-info").innerText = "";
+        }
+    }
+    document.getElementById("buttons").appendChild(button);
+}
+
 
 async function onLoad() {
     // Query string checks:
@@ -258,6 +283,12 @@ async function onLoad() {
     let abi = await (await fetch("nft-vickrey.abi.json")).json();
     let auctionContract = new ethers.Contract(info.addr, abi, web3Provider);
     fetchAndShowContractData(auctionContract, info.whoami);
+
+    let web3Signer = web3Provider.getSigner();
+    let signableContract = new ethers.Contract(info.addr, abi, web3Signer);
+    await addRecommendButton("Withdraw", signableContract.withdraw, []);
+    await addRecommendButton("Claim", signableContract.claim, []);
+    await addRecommendButton("Reveal", signableContract.reveal, [3, "0x4"]);
     
     // Show some static info:
     let prefix = "https://ropsten.etherscan.io/address/"
