@@ -139,7 +139,7 @@ contract VickreyAuctionNFT {
     
     // Bid with a deposit. Note that the deposit is not the bid.
     // You can bid multiple times. Deposit accumulates, and your bid overwrites.
-    function bid(bytes32 hash) public payable onlyStarted {
+    function deposit(bytes32 hash) public payable onlyStarted {
         require(block.timestamp < endOfBidding, "It's not time to bid!");
         require(msg.sender != seller, "Seller cannot bid!");
 
@@ -155,11 +155,11 @@ contract VickreyAuctionNFT {
     }
 
 
-    function reveal(uint256 amount, uint256 nonce) public onlyStarted {
+    function reveal(uint256 bid, uint256 nonce) public onlyStarted {
         require(block.timestamp >= endOfBidding && block.timestamp < endOfRevealing, "It's not time to reveal!");
-        require(keccak256(abi.encodePacked(amount, nonce)) == hashedBidOf[msg.sender], "Hash mismatch!");
-        require(amount <= balanceOf[msg.sender], "Amount too large!");
-        require(amount >= reservePrice, "Amount too small!");
+        require(keccak256(abi.encodePacked(bid, nonce)) == hashedBidOf[msg.sender], "Hash mismatch!");
+        require(bid <= balanceOf[msg.sender], "Amount too large!");
+        require(bid >= reservePrice, "Amount too small!");
         require(!revealed[msg.sender], "You had revealed!");
         revealed[msg.sender] = true;
 
@@ -167,23 +167,23 @@ contract VickreyAuctionNFT {
         // Nothing will be auto-triggered at the deadline moment, so we maintain the winner info to be up-to-date.
         
         // Well we must make this clear: upon a tie, the early bird wins.
-        if (highBidder == seller || amount > highBid) {
+        if (highBidder == seller || bid > highBid) {
             // undo the previous escrow
             transfer(seller, highBidder, secondBid);
 
             // update the highest and second highest bids
             secondBid = highBid;
-            highBid = amount;
+            highBid = bid;
             highBidder = msg.sender;
 
             // escrow an amount equal to the second highest bid
             transfer(highBidder, seller, secondBid);
-        } else if (amount > secondBid) {
+        } else if (bid > secondBid) {
             // undo the previous escrow
             transfer(seller, highBidder, secondBid);
 
             // update the second highest bid
-            secondBid = amount;
+            secondBid = bid;
 
             // escrow an amount equal to the second highest bid
             transfer(highBidder, seller, secondBid);
