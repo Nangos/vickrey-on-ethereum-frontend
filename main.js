@@ -374,21 +374,8 @@ async function onLoad() {
     }
 
     // Environment sanity checks:
-    if (typeof window.ethereum === 'undefined') {
-        msg = "Cannot access Ethereum. Please make sure MetaMask is running.\n"
-            + "When done, refresh the page.";
-        window.alert(msg);
-        document.getElementById("errors").innerText = msg;
-        return;
-    }
-
-    let web3Provider = new ethers.providers.Web3Provider(window.ethereum);
-    let network = await web3Provider.detectNetwork();
-    if (network.name != "ropsten") {
-        msg = "Please switch to Ropsten network via MetaMask.\n"
-            + "When done, refresh the page.";
-        window.alert(msg);
-        document.getElementById("errors").innerText = msg;
+    let web3Provider = await checkWeb3();
+    if (web3Provider == null) {
         return;
     }
 

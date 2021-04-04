@@ -133,3 +133,24 @@ async function uploadFileAsJSON() {
         document.body.removeChild(element);
     });
 }
+
+// Sanity checks:
+async function checkWeb3() {
+    if (typeof window.ethereum === 'undefined') {
+        msg = "Cannot access Ethereum. Please make sure MetaMask is running.\n"
+            + "When done, refresh the page.";
+        window.alert(msg);
+        return null;
+    }
+
+    let web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+    let network = await web3Provider.detectNetwork();
+    if (network.name != "ropsten") {
+        msg = "Please switch to Ropsten network via MetaMask.\n"
+            + "When done, refresh the page.";
+        window.alert(msg);
+        return null;
+    }
+
+    return web3Provider;
+}
