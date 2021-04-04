@@ -86,3 +86,50 @@ function asEtherString(wei) {
 function asWeiAndEther(wei) {
     return `${wei} wei (= ${asEtherString(wei)} Ether)`;
 }
+
+// Downloading & Uploading:
+function downloadJSONFile(filename, object) {
+    let text = JSON.stringify(object);
+    let element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+}
+
+async function uploadFileAsJSON() {
+    return new Promise((resolve, reject) => {
+        let element = document.createElement('input');
+        element.setAttribute('type', 'file');
+        
+        element.style.display = 'none';
+    
+        document.body.appendChild(element);
+        element.click();
+        element.onchange = (e) => {
+            try {
+                let file = e.target.files[0];
+                let reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        let text = e.target.result;
+                        obj = JSON.parse(text);
+                        resolve(obj);
+                    } catch (err) {
+                        console.log(err);
+                        reject(err);
+                    }
+                };
+                reader.readAsText(file);
+            } catch (err) {
+                console.log(err);
+                reject(err);
+            }
+        };
+        document.body.removeChild(element);
+    });
+}

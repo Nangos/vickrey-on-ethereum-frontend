@@ -3,9 +3,14 @@
 // This can be slow, but simplifies the logic.
 // (Anyway, Ethereum is slower!!)
 //
-async function fetchAndShowContractData(contract) {
+async function fetchAndShowContractData(contract, signableContract) {
     let yourAddress = ethereum.selectedAddress;
     document.getElementById("your-address").innerHTML = `Your address: ${yourAddress}`;
+
+    clearAllButtons();
+    if (yourAddress == null) {
+        addLogInButton();
+    }
 
     let generalInfo = "\nGeneral Info:\n";
     let personalInfo = "\nPersonal Info:\n";
@@ -98,6 +103,9 @@ async function fetchAndShowContractData(contract) {
                     let yourHashedBid = await contract.hashedBidOf(yourAddress);
                     if (isZeroHex(yourHashedBid)) {
                         personalInfo += `Seems like you have not bidded yet. Wanna join?\n`;
+                        if (reservePrice != null) {
+                            addDepositButton(signableContract, reservePrice);
+                        }
                     } else {
                         personalInfo += `Your secret bid is ${yourHashedBid}.\nDon't forget to reveal it when it's time!\n`;
                     }
@@ -115,6 +123,7 @@ async function fetchAndShowContractData(contract) {
                             personalInfo += `You have successfully revealed! Let's wait for the final result. Good luck!\n`;
                         } else {
                             personalInfo += `Seems like you have not revealed yet. Don't miss the deadline!\n`;
+                            addRevealButton(signableContract);
                         }
                     }
                 })
@@ -166,9 +175,11 @@ async function fetchAndShowContractData(contract) {
                     if (isEqual(highBidder, seller)) {
                         personalInfo += `Unfortunately, your NFT was not sold out!\n`;
                         personalInfo += `You can call claim() to get your NFT back, if you haven't done so.\n`;
+                        addClaimButton(signableContract);
                     } else if (highBidder != null && secondBid != null) {
                         personalInfo += `Congratulations! Your NFT was sold at the price of ${asWeiAndEther(secondBid)}!\n`;
                         personalInfo += `You can call withdraw() to get your money.\n`;
+                        addWithdrawButton(signableContract);
                     }
                 }
 
@@ -177,6 +188,8 @@ async function fetchAndShowContractData(contract) {
                         personalInfo += `Congratulations! You won the auction. You paid the seller ${asWeiAndEther(secondBid)}.\n`;
                         personalInfo += `You can call claim() to claim your NFT, if you haven't done so.\n`;
                         personalInfo += `And you can call withdraw() to get back your overpaid part of the deposit.\n`;
+                        addClaimButton(signableContract);
+                        addWithdrawButton(signableContract);
                     }
 
                     if (!isEqual(highBidder, yourAddress)) {
@@ -187,6 +200,7 @@ async function fetchAndShowContractData(contract) {
                                 youHaveRevealed = await contract.revealed(yourAddress);
                                 if (youHaveRevealed == true) {
                                     personalInfo += `You can call withdraw() to get back your deposit.\n`;
+                                    addWithdrawButton(signableContract);
                                 }
                                 if (youHaveRevealed == false) {
                                     personalInfo += `Unfortunately you cannot withdraw your deposit, because you did not reveal your bid in time.\n`;
@@ -215,17 +229,17 @@ async function fetchAndShowContractData(contract) {
     document.getElementById("summary").innerText = summary;
 
     // set timeout for the next run:
-    setTimeout(fetchAndShowContractData, 10000, contract);
+    setTimeout(fetchAndShowContractData, 10000, contract, signableContract);
 }
 
-// Just testing adding some dummy buttons
-async function addRecommendButton(text, action, parameters) {
+// functions to add buttons:
+
+function addRecommendButton(text, customAsyncFunction) {
     let button = document.createElement("button");
     button.innerText = text;
     button.onclick = async () => {
         try {
-            await ethereum.request({ method: 'eth_requestAccounts' }); // connect to MetaMask
-            result = await action.apply(this, parameters); // submit tx (triggers MetaMask window)
+            result = await customAsyncFunction();
             txURL = "https://ropsten.etherscan.io/tx/" + result.hash;
             document.getElementById("success-info").innerHTML = 
                 "Your transaction has been successfully submitted to the blockchain " +
@@ -243,7 +257,109 @@ async function addRecommendButton(text, action, parameters) {
     document.getElementById("buttons").appendChild(button);
 }
 
+function addDepositButton(signableContract, minimum) {
+    addRecommendButton("Secretly Bid", async () => {
+        // query the user:
+        let bidInWei = null;
+        while (!bidInWei || bidInWei.lt(minimum)) {
+            response = window.prompt(
+                "How much (in wei) would you bid for the NFT?\n\n" +
+                "NOTE: your bid must be NO SMALLER THAN the minimal price (" + minimum.toString() + " wei)",
+                ""
+            );
+            bidInWei = parseBigNumber(response);
+        }
+        
+        let deposit = null;
+        while (!deposit || deposit.lt(bidInWei)) {
+            response = window.prompt(
+                "How much (in wei) would you deposit into the auction contract?\n\n" +
+                "NOTE1: your deposit must be NO SMALLER THAN your bid (" + bidInWei.toString() + " wei).\n\n" +
+                "NOTE2: your bid is a secret, but YOUR DEPOSIT IS PUBLIC. I recommend you use a different value from your bid.",
+                ""
+            );
+            deposit = parseBigNumber(response);
+        }
 
+        let nonce = generateRandomNonce(); // directly make one for you!
+        let encoder = ethers.utils.defaultAbiCoder;
+        let hash = ethers.utils.keccak256(encoder.encode(["uint", "bytes32"], [bidInWei, nonce]));
+
+        // Download the info and alert the user:
+        let obj = {
+            "contract": signableContract.address,
+            "bid": bidInWei.toString(),
+            "nonce": nonce,
+            "hash": hash,
+            "deposit": deposit.toString(),
+        };
+        fileName = "IMPORTANT-SECRET.json";
+        downloadJSONFile(fileName, obj);
+        window.alert(`Be sure to keep the downloaded file (${fileName}) in a secure place! You need it at the revealing stage.`);
+
+        // process the transaction:
+        let result = await signableContract.deposit(hash, {value: deposit});
+        return result;
+    });
+}
+
+function addRevealButton(signableContract) {
+    addRecommendButton("Reveal Secret", async () => {
+        window.alert("Please choose your secret file you downloaded MOST RECENTLY, probably with a name similar to 'IMPORTANT-SECRET.json'.")
+
+        // fetch the secret file:
+        let obj = await uploadFileAsJSON();
+        if (!obj.contract || !obj.bid || !obj.nonce || !obj.hash || !obj.deposit) {
+            throw Error("Wrong File: Missing JSON fields");
+        }
+        if (obj.contract != signableContract.address) {
+            throw Error("Wrong File: Contract address mismatch");
+        }
+
+        // process the transaction:
+        let result = await signableContract.reveal(obj.bid, obj.nonce);
+        return result;
+    });
+}
+
+function addClaimButton(signableContract) {
+    addRecommendButton("Claim", async () => {
+        let result = await signableContract.claim();
+        return result;
+    });
+}
+
+function addWithdrawButton(signableContract) {
+    addRecommendButton("Withdraw", async () => {
+        let result = await signableContract.withdraw();
+        return result;
+    });
+}
+
+function addLogInButton() {
+    let button = document.createElement("button");
+    button.innerText = "Log in via Metamask";
+    button.onclick = async () => {
+        try {
+            await ethereum.request({ method: 'eth_requestAccounts' }); // connect to MetaMask
+            location.reload(); // reload page
+        } catch (err) {
+            console.log(err);
+            document.getElementById("errors").innerText = "Cannot log in. See console logs for more information.";
+        }
+    }
+    document.getElementById("buttons").appendChild(button);
+}
+
+function clearAllButtons() {
+    let buttons = document.getElementById("buttons");
+    while (buttons.firstChild) {
+        buttons.removeChild(buttons.firstChild);
+    }
+}
+
+
+// MAIN:
 async function onLoad() {
     // Query string checks:
     let info = getJsonFromUrl();
@@ -282,13 +398,11 @@ async function onLoad() {
     // Fetch & refresh the constract data every 10 seconds:
     let abi = await (await fetch("nft-vickrey.abi.json")).json();
     let auctionContract = new ethers.Contract(info.addr, abi, web3Provider);
-    fetchAndShowContractData(auctionContract);
 
     let web3Signer = web3Provider.getSigner();
     let signableContract = new ethers.Contract(info.addr, abi, web3Signer);
-    await addRecommendButton("Withdraw", signableContract.withdraw, []);
-    await addRecommendButton("Claim", signableContract.claim, []);
-    await addRecommendButton("Reveal", signableContract.reveal, [3, "0x4"]);
+
+    fetchAndShowContractData(auctionContract, signableContract);
     
     // Show some static info:
     let prefix = "https://ropsten.etherscan.io/address/"
