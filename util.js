@@ -197,3 +197,22 @@ async function getContractFactory(abiURL, bytecodeURL) {
     let bytecode = await (await fetch(bytecodeURL)).text();
     return new ethers.ContractFactory(abi, bytecode, web3Provider.getSigner());
 }
+
+function addDinoGame(className) {
+    let element = document.createElement('iframe');
+    element.setAttribute('class', className);
+    element.setAttribute('src', "https://tuckercraig.com/dino/");
+    element.setAttribute('width', 800);
+    element.setAttribute('height', 300);
+    element.setAttribute('scrolling', 'no');
+    document.body.appendChild(element);
+}
+
+function removeDinoGames(className) {
+    Array.from(document.getElementsByClassName(className)).forEach(element => {
+        console.log(element.tagName);
+        if (element.tagName == "IFRAME") {
+            document.body.removeChild(element);
+        }
+    })
+}

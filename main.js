@@ -287,6 +287,9 @@ function addRecommendButton(text, customAsyncFunction) {
                 "It should take effect shortly; when it's done, this page will be automatically updated.<br>" +
                 "Track the progress " + makeHref("here", txURL) + "!";
             document.getElementById("errors").innerText = "";
+
+            addDinoGame("game");
+            
             // clear info when done:
             await result.wait();
             location.reload();

@@ -38,6 +38,8 @@ async function onMintButtonClicked() {
             "Please wait shortly and keep this page open; you'll be noticed when done.<br>" +
             "Or, you can track the progress " + makeHref("here", txURL) + ".\n\n";
 
+        addDinoGame("game"); // to make users pleased to wait
+
         let receipt = await tx.wait();
         let tokenID = receipt.events[0].topics[3]; // This hardcoding is bad, but we are just making a demo?
         tokenID = ethers.BigNumber.from(tokenID).toString(); // Convert to decimal to make it more readable.
@@ -46,6 +48,8 @@ async function onMintButtonClicked() {
         window.alert(msg);
         document.getElementById("status").innerText = msg;
         document.getElementById("errors").innerText = "";
+
+        removeDinoGames("game");
     } catch (err) {
         console.log(err);
         document.getElementById("status").innerText = "";
@@ -210,6 +214,8 @@ async function onCreateButtonClicked() {
         let tx = auctionContract.deployTransaction;
         let txURL = "https://ropsten.etherscan.io/tx/" + tx.hash;
         appendStatus("Submitting the contract to blockchain... You can track progress " + makeHref("here", txURL));
+
+        addDinoGame("game");
         
         await tx.wait();
         appendStatus("Deployment succeed!");
@@ -239,6 +245,8 @@ async function onCreateButtonClicked() {
         document.getElementById("errors").innerText = "Failed to approve! See console log for details.\n" + err.message
             + "\n\nYou'll still have to approve it in the main page of the auction.";
     }
+
+    removeDinoGames("game");
 
     let frondEndURL = `${getRootURL()}?addr=${auctionContract.address}`;
     appendStatus("You can now access your auction contract " + makeHref("here", frondEndURL) + "!");
