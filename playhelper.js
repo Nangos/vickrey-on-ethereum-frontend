@@ -19,12 +19,6 @@ function downloadTxtFile(filename, text) {
     document.body.removeChild(element);
 }
 
-function getRootURL() {
-    let url = location.origin + location.pathname;
-    url = url.substr(0, url.lastIndexOf("/"));
-    return url;
-}
-
 function onGeneratorButtonClicked() {
     // Check query sanity:
     let info = getJsonFromUrl();

@@ -9,29 +9,34 @@
   <body onload="onLoad()">
     <h2>Start a New Auction!</h2>
     <div>
-      NFT Token Address: <input type="text" id="token-address" value="0x" size="50px">
-      <span id="protocol-info"></span>
-      <button id="mint-button" disabled="true">Mint An NFT For Free</button>
+      NFT Token Address: <input type="text" id="token-address" value="0x" size="50px" oninput="onTokenAddressUpdated(event)">
+      <span class="checker"></span>
+      <span class="info"></span>
+      <button id="mint-button" disabled="true" onclick="onMintButtonClicked()">Mint An NFT For Free</button>
     </div>
     <div>
-      NFT Token ID: <input type="text" id="token-id" value="" size="50px">
-      <span id="token-info"></span>
+      NFT Token ID: <input type="text" id="token-id" value="" size="50px" oninput="onTokenIDUpdated(event)">
+      <span class="checker"></span>
+      <span class="info"></span>
     </div>
     <div>
-      Lowest Price (in wei): <input type="text" id="reserve-price" value="" size="50px">
-      <span id="price-readable"></span>
+      Lowest Price (in wei): <input type="text" id="reserve-price" value="" size="50px" oninput="onReservePriceUpdated(event)">
+      <span class="checker"></span>
+      <span class="info"></span>
     </div>
     <div>
-      Bidding Period (in seconds): <input type="text" id="bidding-period" value="">
-      <span id="bidding-readable"></span>
+      Bidding Period (in seconds): <input type="text" id="bidding-period" value="" oninput="onBiddingPeriodUpdated(event)">
+      <span class="checker"></span>
+      <span class="info"></span>
     </div>
     <div>
-      Revealing Period (in seconds): <input type="text" id="revealing-period" value="">
-      <span id="revealing-readable"></span>
+      Revealing Period (in seconds): <input type="text" id="revealing-period" value="" oninput="onRevealingPeriodUpdated(event)"> 
+      <span class="checker"></span>
+      <span class="info"></span>
     </div>
-    <button id="create-button" disabled="true">Create An Auction Contract</button>
+    <button id="create-button" disabled="true" onclick="onCreateButtonClicked()">Create An Auction Contract</button>
     <h3 id="errors"></h3>
-    <button id="login-button" disabled="true" onclick="onLoginButtonClicked()">Log in via Metamask</button>
+    <button id="login-button" disabled="true" onclick="onLoginButtonClicked()">Log in via MetaMask</button>
     <div id="status"></div>
   </body>
 </html>

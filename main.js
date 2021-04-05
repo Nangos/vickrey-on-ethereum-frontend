@@ -64,7 +64,17 @@ async function fetchAndShowContractData(contract, signableContract) {
         if (!started) {
             generalInfo += "Auction has not started yet!\n";
             if (isEqual(seller, yourAddress)) {
-                personalInfo += "You are the seller! Are you ready to start the auction?\n";
+                if (tokenID != null && tokenAddress != null) {
+                    let nftContract = await getContractAPI(tokenAddress, "toy-nft.abi.json", true);
+                    let approvedAddress = await nftContract.getApproved(tokenID);
+                    if (isEqual(approvedAddress, contract.address)) {
+                        personalInfo += "You are the seller! Are you ready to start the auction?\n";
+                        addStartAuctionButton(signableContract);
+                    } else {
+                        personalInfo += "You have not approved this contract to use your NFT yet.\n";
+                        addApproveButton(signableContract, tokenAddress, tokenID);
+                    }
+                }
             } else if (yourAddress != null) {
                 personalInfo += "Please wait patiently until the auction starts. Wanna learn how to play?\n";
             }
@@ -171,25 +181,52 @@ async function fetchAndShowContractData(contract, signableContract) {
                     return secondBidInWei;
                 })
 
+                let withdrawn = await query("balanceOf()", async () => {
+                    let yourBalance = await contract.balanceOf(yourAddress);
+                    return yourBalance.eq(0);
+                })
+
+                let claimed = await query("nft.ownerOf()", async () => {
+                    let nftContract = await getContractAPI(tokenAddress, "toy-nft.abi.json", true);
+                    let owner = await nftContract.ownerOf(tokenID);
+                    return owner != null && !isEqual(owner, contract.address);
+                })
+
                 if (isEqual(seller, yourAddress)) {
                     if (isEqual(highBidder, seller)) {
                         personalInfo += `Unfortunately, your NFT was not sold out!\n`;
-                        personalInfo += `You can call claim() to get your NFT back, if you haven't done so.\n`;
-                        addClaimButton(signableContract);
+                        if (claimed) {
+                            personalInfo += `You have successfully claimed your NFT back.\n`;
+                        } else {
+                            personalInfo += `You can call claim() to get your NFT back, if you haven't done so.\n`;
+                            addClaimButton(signableContract);
+                        }
                     } else if (highBidder != null && secondBid != null) {
                         personalInfo += `Congratulations! Your NFT was sold at the price of ${asWeiAndEther(secondBid)}!\n`;
-                        personalInfo += `You can call withdraw() to get your money.\n`;
-                        addWithdrawButton(signableContract);
+                        if (withdrawn) {
+                            personalInfo += `There is no more money to withdraw at this time.\n`;
+                        } else {
+                            personalInfo += `You can call withdraw() to get your money.\n`;
+                            addWithdrawButton(signableContract);
+                        }
                     }
                 }
 
                 if (yourAddress != null && !isEqual(yourAddress, seller)) {
                     if (isEqual(highBidder, yourAddress) && secondBid != null) {
                         personalInfo += `Congratulations! You won the auction. You paid the seller ${asWeiAndEther(secondBid)}.\n`;
-                        personalInfo += `You can call claim() to claim your NFT, if you haven't done so.\n`;
-                        personalInfo += `And you can call withdraw() to get back your overpaid part of the deposit.\n`;
-                        addClaimButton(signableContract);
-                        addWithdrawButton(signableContract);
+                        if (claimed) {
+                            personalInfo += `You have successfully claimed your NFT.\n`;
+                        } else {
+                            personalInfo += `You can call claim() to claim your NFT, if you haven't done so.\n`;
+                            addClaimButton(signableContract);
+                        }
+                        if (withdrawn) {
+                            personalInfo += `There is no more money to withdraw at this time.\n`;
+                        } else {
+                            personalInfo += `And you can call withdraw() to get back your overpaid part of the deposit.\n`;
+                            addWithdrawButton(signableContract);
+                        }
                     }
 
                     if (!isEqual(highBidder, yourAddress)) {
@@ -199,8 +236,12 @@ async function fetchAndShowContractData(contract, signableContract) {
                                 personalInfo += `You did not win the auction. Better luck next time!\n`;
                                 youHaveRevealed = await contract.revealed(yourAddress);
                                 if (youHaveRevealed == true) {
-                                    personalInfo += `You can call withdraw() to get back your deposit.\n`;
-                                    addWithdrawButton(signableContract);
+                                    if (withdrawn) {
+                                        personalInfo += `There is no more money to withdraw at this time.\n`;
+                                    } else {
+                                        personalInfo += `You can call withdraw() to get back your deposit.\n`;
+                                        addWithdrawButton(signableContract);
+                                    }
                                 }
                                 if (youHaveRevealed == false) {
                                     personalInfo += `Unfortunately you cannot withdraw your deposit, because you did not reveal your bid in time.\n`;
@@ -239,13 +280,16 @@ function addRecommendButton(text, customAsyncFunction) {
     button.innerText = text;
     button.onclick = async () => {
         try {
-            result = await customAsyncFunction();
-            txURL = "https://ropsten.etherscan.io/tx/" + result.hash;
+            let result = await customAsyncFunction();
+            let txURL = "https://ropsten.etherscan.io/tx/" + result.hash;
             document.getElementById("success-info").innerHTML = 
-                "Your transaction has been successfully submitted to the blockchain " +
-                "and should take effect shortly.<br>" +
+                "Your transaction has been successfully submitted to the blockchain!<br>" +
+                "It should take effect shortly; when it's done, this page will be automatically updated.<br>" +
                 "Track the progress " + makeHref("here", txURL) + "!";
             document.getElementById("errors").innerText = "";
+            // clear info when done:
+            await result.wait();
+            location.reload();
         } catch (err) {
             console.log(err);
             document.getElementById("errors").innerText = "Operation failed!\n" 
@@ -335,6 +379,22 @@ function addWithdrawButton(signableContract) {
         return result;
     });
 }
+
+function addStartAuctionButton(signableContract) {
+    addRecommendButton("Start Auction", async () => {
+        let result = await signableContract.startAuction();
+        return result;
+    });
+}
+
+function addApproveButton(signableContract, tokenAddress, tokenID) {
+    addRecommendButton("Approve NFT Transfer", async () => {
+        let nftContract = await getContractAPI(tokenAddress, "toy-nft.abi.json", false);
+        let result = await nftContract.approve(signableContract.address, tokenID);
+        return result;
+    })
+}
+
 
 function addLogInButton() {
     let button = document.createElement("button");

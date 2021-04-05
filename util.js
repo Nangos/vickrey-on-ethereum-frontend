@@ -38,6 +38,12 @@ function makeHref(text, url) {
     return `<a target="_blank" href=${url}>${text}</a>`;
 }
 
+function getRootURL() {
+    let url = location.origin + location.pathname;
+    url = url.substr(0, url.lastIndexOf("/"));
+    return url;
+}
+
 // Ethereum-specific utils:
 function parseBigNumber(str) {
     max = ethers.BigNumber.from(256).pow(32).sub(1);
@@ -85,6 +91,18 @@ function asEtherString(wei) {
 
 function asWeiAndEther(wei) {
     return `${wei} wei (= ${asEtherString(wei)} Ether)`;
+}
+
+function asTimeIntervalString(rawSeconds) {
+    let rest = rawSeconds;
+    let seconds = rest % 60; rest = Math.floor(rest / 60);
+    let minutes = rest % 60; rest = Math.floor(rest / 60);
+    let hours = rest % 24; rest = Math.floor(rest / 24);
+    let days = rest;
+    return (days > 0 ? `${days} day(s) ` : "")
+        + (hours > 0 ? `${hours} hour(s) ` : "")
+        + (minutes > 0 ? `${minutes} minute(s) ` : "")
+        + (seconds> 0 ? `${seconds} second(s) ` : "");
 }
 
 // Downloading & Uploading:
@@ -153,4 +171,29 @@ async function checkWeb3() {
     }
 
     return web3Provider;
+}
+
+async function getContractAPI(address, abiURL, isReadonly) {
+    let web3Provider = await checkWeb3();
+    if (web3Provider == null) {
+        throw Error("Invalid web3 provider.");
+    }
+
+    let abi = await (await fetch(abiURL)).json();
+    if (isReadonly) {
+        return new ethers.Contract(address, abi, web3Provider);
+    } else {
+        return new ethers.Contract(address, abi, web3Provider.getSigner());
+    }
+}
+
+async function getContractFactory(abiURL, bytecodeURL) {
+    let web3Provider = await checkWeb3();
+    if (web3Provider == null) {
+        throw Error("Invalid web3 provider.");
+    }
+
+    let abi = await (await fetch(abiURL)).json();
+    let bytecode = await (await fetch(bytecodeURL)).text();
+    return new ethers.ContractFactory(abi, bytecode, web3Provider.getSigner());
 }
