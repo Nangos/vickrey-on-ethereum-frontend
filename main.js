@@ -235,7 +235,7 @@ async function fetchAndShowContractData(contract, signableContract) {
                             if (!isZeroHex(yourHashedBid)) {
                                 personalInfo += `You did not win the auction. Better luck next time!\n`;
                                 youHaveRevealed = await contract.revealed(yourAddress);
-                                if (youHaveRevealed == true) {
+                                if (true || youHaveRevealed == true) {
                                     if (withdrawn) {
                                         personalInfo += `There is no more money to withdraw at this time.\n`;
                                     } else {
@@ -243,9 +243,9 @@ async function fetchAndShowContractData(contract, signableContract) {
                                         addWithdrawButton(signableContract);
                                     }
                                 }
-                                if (youHaveRevealed == false) {
-                                    personalInfo += `Unfortunately you cannot withdraw your deposit, because you did not reveal your bid in time.\n`;
-                                }
+                                // if (youHaveRevealed == false) {
+                                //     personalInfo += `Unfortunately you cannot withdraw your deposit, because you did not reveal your bid in time.\n`;
+                                // }
                             } else {
                                 personalInfo += `You did not participate in this auction.\n`;
                             }

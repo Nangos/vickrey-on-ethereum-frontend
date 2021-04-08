@@ -51,7 +51,7 @@ STAGE I -- Bid:
 STAGE II -- Reveal:
 - A bidder cannot reveal until the bid deadline, but please don't miss the reveal deadline either.
 - The bid revealed must match the encrypted version (and no more than the deposit for sure) to be considered valid.
-- If a bidder do not reveal their bid in time, their deposit will be locked forever. So please always reveal!!
+- If a bidder do not reveal their bid in time, they'll be regarded as they did not bid at all.
 
 STAGE III -- Decide the Winner:
 - The bidder with the highest price wins the auction, but only pays the seller for the second highest price.
@@ -199,7 +199,9 @@ contract VickreyAuctionNFT {
     // NOTE: the seller also calls this function to claim their money.
     function withdraw() public onlyStarted {
         require(block.timestamp >= endOfRevealing, "Auction is still going on!");
-        require(revealed[msg.sender], "You did not reveal, so cannot withdraw!");
+
+        // Below 1 line(s) are temporarily removed:
+        // require(revealed[msg.sender], "You did not reveal, so cannot withdraw!");
 
         uint256 amount = balanceOf[msg.sender];
         balanceOf[msg.sender] = 0;
