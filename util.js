@@ -199,6 +199,7 @@ async function getContractFactory(abiURL, bytecodeURL) {
 }
 
 function addDinoGame(className) {
+    return; // Temporarily disabled...
     let element = document.createElement('iframe');
     element.setAttribute('class', className);
     element.setAttribute('src', "https://tuckercraig.com/dino/");
@@ -209,6 +210,7 @@ function addDinoGame(className) {
 }
 
 function removeDinoGames(className) {
+    return; // Temporarily disabled...
     Array.from(document.getElementsByClassName(className)).forEach(element => {
         console.log(element.tagName);
         if (element.tagName == "IFRAME") {
