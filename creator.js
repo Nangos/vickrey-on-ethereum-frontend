@@ -13,6 +13,9 @@ async function onLoad() {
     target = document.getElementById("token-address");
     target.value = "0x8f7ae9a76d3cf821415b6c01e0171c61b36e3ed7";
     await onTokenAddressUpdated({target: target}); // The line above does not trigger the update, so I manually trigger it (sort of hacky??)
+
+    // add waiting time:
+    document.getElementById("waiting-time").innerText = await waitingTimeAsString();
 }
 
 async function onLoginButtonClicked() {
@@ -30,6 +33,8 @@ async function onMintButtonClicked() {
     try {
         let uri = window.prompt("What's the URI of your NFT?", "changeMe!");
         let nftContract = await getContractAPI(tokenAddress, "toy-nft.abi.json", false);
+
+        document.getElementById("waiting-time").innerText = await waitingTimeAsString(); // update waiting time
 
         let tx = await nftContract.mintToyNFT(uri);
         let txURL = "https://ropsten.etherscan.io/tx/" + tx.hash;
@@ -207,6 +212,8 @@ async function onCreateButtonClicked() {
     let deployed = false;
     try {
         appendStatus("STEP 1/2: Deploy the auction contract...");
+        document.getElementById("waiting-time").innerText = await waitingTimeAsString(); // update waiting time
+
         let factory = await getContractFactory("nft-vickrey.abi.json", "nft-vickrey.bytecode.txt");
         auctionContract = await factory.deploy(
             args.tokenAddress, args.tokenID, args.reservePrice, args.biddingPeriod, args.revealingPeriod
@@ -232,6 +239,8 @@ async function onCreateButtonClicked() {
 
     try {
         appendStatus("STEP 2/2: Approve the auction contract to sell your NFT...");
+        document.getElementById("waiting-time").innerText = await waitingTimeAsString(); // update waiting time
+        
         let nftContract = await getContractAPI(args.tokenAddress, "toy-nft.abi.json", false);
         let tx = await nftContract.approve(auctionContract.address, args.tokenID);
         let txURL = "https://ropsten.etherscan.io/tx/" + tx.hash;

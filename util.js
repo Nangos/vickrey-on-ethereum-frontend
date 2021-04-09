@@ -216,3 +216,53 @@ function removeDinoGames(className) {
         }
     })
 }
+
+// For demo use:
+function getNickName(address) {
+    let names = {
+        "0x8c34ad4a9336788814444ca3808854a5e61e00fa": "Seller",
+        "0xce08fffd2891d135a955ebd5d38e5a5ed179d921": "Alice",
+        "0x270ecb84d4640bd22ee4558f299fb298119be3b4": "Bob",
+        "0x20ccb96b45d1c147d49755b81dbb2c0c93432fa7": "Trudy",
+    }
+    if (names[address] != undefined) {
+        return names[address];
+    } else {
+        return null;
+    }
+}
+
+async function getBlockSpeedArray(numRecent) {
+    try {
+        // fetch time intervals:
+        let web3Provider = await checkWeb3();
+        let latestBlock = await web3Provider.getBlockNumber();
+        let blockNumbers = Array.from({length: numRecent + 1}, (x, i) => latestBlock - i);
+        let blockTimestamps = await Promise.all(blockNumbers.map(async num => (await web3Provider.getBlock(num)).timestamp));
+        let intervals = Array.from({length: numRecent}, (x, i) => blockTimestamps[i] - blockTimestamps[i+1]);
+        return intervals;
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
+}
+
+function getTypicalRespondRange(array, low, high) {
+    let len = array.length;
+    array.sort((a, b) => a - b);
+    return {
+        low: array[Math.floor(low * len)],
+        high: array[Math.floor(high * len)]
+    }
+}
+
+async function waitingTimeAsString() {
+    try {
+        let range = getTypicalRespondRange(await getBlockSpeedArray(20), 0.2, 0.9);
+        let offset = 1; // 1s for confirmation or anything
+        return `Estimated processing time: ${asTimeIntervalString(range.low + offset)} to ${asTimeIntervalString(range.high + offset)}`;
+    } catch (err) {
+        console.log(err);
+        return `Estimated processing time: (Unavailable)`;
+    }
+}

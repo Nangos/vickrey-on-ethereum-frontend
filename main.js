@@ -7,6 +7,12 @@ async function fetchAndShowContractData(contract, signableContract) {
     let yourAddress = ethereum.selectedAddress;
     document.getElementById("your-address").innerHTML = `Your address: ${yourAddress}`;
 
+    // Demo-use nicknaming:
+    let nickName = getNickName(yourAddress);
+    if (nickName != null) {
+        document.getElementById("header").innerText = `Welcome, ${nickName}!`;
+    }
+
     clearAllButtons();
     if (yourAddress == null) {
         addLogInButton();
@@ -268,6 +274,10 @@ async function fetchAndShowContractData(contract, signableContract) {
         summary = ""; // does not show summary upon error
     }
     document.getElementById("summary").innerText = summary;
+
+    if (yourAddress != null && document.getElementById("buttons").childElementCount > 0) {
+        document.getElementById("waiting-time").innerText = await waitingTimeAsString();
+    }
 
     // set timeout for the next run:
     setTimeout(fetchAndShowContractData, 10000, contract, signableContract);
